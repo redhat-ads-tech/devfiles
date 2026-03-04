@@ -14,8 +14,13 @@ components:
           value: unix:///tmp/podman.sock
         - name: TESTCONTAINERS_RYUK_DISABLED
           value: "true"
+        # Workaround: the DevWorkspace operator should inject HOST_USERS=false
+        # when hostUsers: false is set in the operator config, but doesn't.
+        # The UDI entrypoint uses this to fix /etc/subuid for nested containers.
         - name: HOST_USERS
           value: "false"
+        - name: QUARKUS_ANALYTICS_DISABLED
+          value: "true"
       memoryLimit: 5Gi
       cpuLimit: 2500m
       volumeMounts:
@@ -53,20 +58,15 @@ commands:
     exec:
       label: "2. Start Development mode (Hot reload + debug)"
       component: development-tooling
-      commandLine: "./mvnw compile quarkus:dev"
+      commandLine: "./mvnw compile quarkus:dev -Dquarkus.analytics.disabled=true"
       group:
         kind: run
         isDefault: true
-  - id: init-nested-containers
+  - id: init-podman-socket
     exec:
-      label: "Configure nested container support"
+      label: "Start podman socket"
       component: development-tooling
       commandLine: |
-        ME=$(whoami)
-        START_ID=$(( $(id -u) + 1 ))
-        RANGE=$(( 65536 - START_ID ))
-        echo "${ME}:${START_ID}:${RANGE}" > /etc/subuid
-        echo "${ME}:${START_ID}:${RANGE}" > /etc/subgid
         nohup podman system service --time=0 unix:///tmp/podman.sock > /dev/null 2>&1 &
       group:
         kind: build
@@ -93,5 +93,5 @@ commands:
         kind: build
 events:
   postStart:
-    - init-nested-containers
+    - init-podman-socket
     - init-continue
