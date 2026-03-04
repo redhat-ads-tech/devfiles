@@ -10,6 +10,10 @@ components:
           value: 0.0.0.0
         - name: MAVEN_OPTS
           value: "-Dmaven.repo.local=/home/user/.m2/repository"
+        - name: DOCKER_HOST
+          value: unix:///tmp/podman.sock
+        - name: TESTCONTAINERS_RYUK_DISABLED
+          value: "true"
       memoryLimit: 5Gi
       cpuLimit: 2500m
       volumeMounts:
@@ -61,6 +65,7 @@ commands:
         RANGE=$(( 65536 - START_ID ))
         echo "${ME}:${START_ID}:${RANGE}" > /etc/subuid
         echo "${ME}:${START_ID}:${RANGE}" > /etc/subgid
+        nohup podman system service --time=0 unix:///tmp/podman.sock > /dev/null 2>&1 &
       group:
         kind: build
   - id: init-continue
