@@ -4,7 +4,7 @@ metadata:
 components:
   - name: development-tooling
     container:
-      image: registry.redhat.io/devspaces/udi-rhel9:3.25
+      image: registry.redhat.io/devspaces/udi-rhel9:3.26.1
       env:
         - name: QUARKUS_HTTP_HOST
           value: 0.0.0.0
@@ -51,6 +51,18 @@ commands:
       group:
         kind: run
         isDefault: true
+  - id: init-nested-containers
+    exec:
+      label: "Configure nested container support"
+      component: development-tooling
+      commandLine: |
+        ME=$(whoami)
+        START_ID=$(( $(id -u) + 1 ))
+        RANGE=$(( 65536 - START_ID ))
+        echo "${ME}:${START_ID}:${RANGE}" > /etc/subuid
+        echo "${ME}:${START_ID}:${RANGE}" > /etc/subgid
+      group:
+        kind: build
   - id: init-continue
     exec:
       label: "Initialize Continue config"
@@ -74,4 +86,5 @@ commands:
         kind: build
 events:
   postStart:
+    - init-nested-containers
     - init-continue
