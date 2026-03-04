@@ -14,6 +14,8 @@ components:
           value: unix:///tmp/podman.sock
         - name: TESTCONTAINERS_RYUK_DISABLED
           value: "true"
+        - name: HOST_USERS
+          value: "false"
       memoryLimit: 5Gi
       cpuLimit: 2500m
       volumeMounts:
