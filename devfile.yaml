@@ -78,28 +78,6 @@ commands:
         fi
       group:
         kind: build
-  - id: init-continue
-    exec:
-      label: "Initialize Continue config"
-      component: development-tooling
-      workingDir: /home/user
-      commandLine: |
-        mkdir -p /home/user/.continue
-        cat > /home/user/.continue/config.yaml << EOF
-        name: Continue Config
-        version: 0.0.1
-        models:
-          - name: LiteMaaS (qwen3-14b)
-            provider: vllm
-            model: qwen3-14b
-            apiKey: ${LLM_API_KEY}
-            apiBase: ${LLM_BASE_URL}
-            roles:
-              - chat
-        EOF
-      group:
-        kind: build
 events:
   postStart:
     - init-podman-socket
-    - init-continue
