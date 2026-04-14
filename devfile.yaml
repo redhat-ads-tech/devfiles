@@ -78,6 +78,20 @@ commands:
         fi
       group:
         kind: build
+  - id: init-continue
+    exec:
+      label: "Initialize Continue config"
+      component: development-tooling
+      commandLine: |
+        # The config.yaml is mounted as a secret at .continue-config/ by the
+        # DevWorkspace operator. We copy it rather than mounting directly into
+        # .continue/ because secret mounts make the directory root-owned and
+        # read-only, preventing Continue from writing session/index files.
+        mkdir -p /home/user/.continue
+        cp /home/user/.continue-config/config.yaml /home/user/.continue/config.yaml
+      group:
+        kind: build
 events:
   postStart:
     - init-podman-socket
+    - init-continue
