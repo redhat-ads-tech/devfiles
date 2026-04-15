@@ -91,7 +91,20 @@ commands:
         cp /home/user/.continue-config/config.yaml /home/user/.continue/config.yaml
       group:
         kind: build
+  - id: init-roo
+    exec:
+      label: "Initialize Roo config"
+      component: development-tooling
+      commandLine: |
+        # Inject the Roo auto-import settings path into che-code's machine
+        # settings so the extension picks up the mounted config secret.
+        jq '. + {"roo-cline.autoImportSettingsPath": "/home/user/.roo-config/roo-code-settings.json"}' \
+          /checode/remote/data/Machine/settings.json > /tmp/settings.json && \
+          mv /tmp/settings.json /checode/remote/data/Machine/settings.json
+      group:
+        kind: build
 events:
   postStart:
     - init-podman-socket
     - init-continue
+    - init-roo
