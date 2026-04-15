@@ -91,6 +91,21 @@ commands:
         cp /home/user/.continue-config/config.yaml /home/user/.continue/config.yaml
       group:
         kind: build
+  - id: init-claude
+    exec:
+      label: "Install Claude CLI and config"
+      component: development-tooling
+      commandLine: |
+        # Install the Claude CLI
+        curl -fsSL https://claude.ai/install.sh -o /tmp/claude-install.sh
+        chmod +x /tmp/claude-install.sh
+        /tmp/claude-install.sh
+        # Copy the pre-configured .claude.json so onboarding is skipped.
+        # Mounted as a secret at .claude-config/ (read-only), copied to
+        # /home/user/ so Claude CLI can update it at runtime.
+        cp /home/user/.claude-config/.claude.json /home/user/.claude.json
+      group:
+        kind: build
   - id: configure-settings
     exec:
       label: "Configure editor settings"
@@ -108,4 +123,5 @@ events:
   postStart:
     - init-podman-socket
     - init-continue
+    - init-claude
     - configure-settings
