@@ -91,14 +91,15 @@ commands:
         cp /home/user/.continue-config/config.yaml /home/user/.continue/config.yaml
       group:
         kind: build
-  - id: init-roo
+  - id: configure-settings
     exec:
-      label: "Initialize Roo config"
+      label: "Configure editor settings"
       component: development-tooling
       commandLine: |
-        # Inject the Roo auto-import settings path into che-code's machine
-        # settings so the extension picks up the mounted config secret.
-        jq '. + {"roo-cline.autoImportSettingsPath": "/home/user/.roo-config/roo-code-settings.json"}' \
+        # Inject extension settings into che-code's machine settings:
+        # - Roo auto-import path for the mounted config secret
+        # - Claude Code terminal mode for DevSpaces compatibility
+        jq '. + {"roo-cline.autoImportSettingsPath": "/home/user/.roo-config/roo-code-settings.json", "claudeCode.useTerminal": true}' \
           /checode/remote/data/Machine/settings.json > /tmp/settings.json && \
           mv /tmp/settings.json /checode/remote/data/Machine/settings.json
       group:
@@ -107,4 +108,4 @@ events:
   postStart:
     - init-podman-socket
     - init-continue
-    - init-roo
+    - configure-settings
