@@ -21,6 +21,8 @@ components:
           value: "false"
         - name: QUARKUS_ANALYTICS_DISABLED
           value: "true"
+        - name: CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS
+          value: "1"
       memoryLimit: 5Gi
       cpuLimit: 2500m
       volumeMounts:
@@ -82,24 +84,46 @@ commands:
     exec:
       label: "Initialize Continue config"
       component: development-tooling
-      workingDir: /home/user
       commandLine: |
+        # The config.yaml is mounted as a secret at .continue-config/ by the
+        # DevWorkspace operator. We copy it rather than mounting directly into
+        # .continue/ because secret mounts make the directory root-owned and
+        # read-only, preventing Continue from writing session/index files.
         mkdir -p /home/user/.continue
-        cat > /home/user/.continue/config.yaml << EOF
-        name: Continue Config
-        version: 0.0.1
-        models:
-          - name: LiteMaaS (qwen3-14b)
-            provider: vllm
-            model: qwen3-14b
-            apiKey: ${LLM_API_KEY}
-            apiBase: ${LLM_BASE_URL}
-            roles:
-              - chat
-        EOF
+        cp /home/user/.continue-config/config.yaml /home/user/.continue/config.yaml
+      group:
+        kind: build
+  - id: init-claude
+    exec:
+      label: "Install Claude CLI and config"
+      component: development-tooling
+      commandLine: |
+        # Install the Claude CLI
+        curl -fsSL https://claude.ai/install.sh -o /tmp/claude-install.sh
+        chmod +x /tmp/claude-install.sh
+        /tmp/claude-install.sh
+        # Copy the pre-configured .claude.json so onboarding is skipped.
+        # Mounted as a secret at .claude-config/ (read-only), copied to
+        # /home/user/ so Claude CLI can update it at runtime.
+        cp /home/user/.claude-config/.claude.json /home/user/.claude.json
+      group:
+        kind: build
+  - id: configure-settings
+    exec:
+      label: "Configure editor settings"
+      component: development-tooling
+      commandLine: |
+        # Inject extension settings into che-code's machine settings:
+        # - Roo auto-import path for the mounted config secret
+        # - Claude Code terminal mode for DevSpaces compatibility
+        jq '. + {"roo-cline.autoImportSettingsPath": "/home/user/.roo-config/roo-code-settings.json", "claudeCode.useTerminal": true}' \
+          /checode/remote/data/Machine/settings.json > /tmp/settings.json && \
+          mv /tmp/settings.json /checode/remote/data/Machine/settings.json
       group:
         kind: build
 events:
   postStart:
     - init-podman-socket
     - init-continue
+    - init-claude
+    - configure-settings
