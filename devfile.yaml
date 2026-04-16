@@ -21,6 +21,8 @@ components:
           value: "false"
         - name: QUARKUS_ANALYTICS_DISABLED
           value: "true"
+        - name: CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS
+          value: "1"
       memoryLimit: 5Gi
       cpuLimit: 2500m
       volumeMounts:
