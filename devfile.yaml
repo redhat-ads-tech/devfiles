@@ -106,6 +106,9 @@ commands:
         # Mounted as a secret at .claude-config/ (read-only), copied to
         # /home/user/ so Claude CLI can update it at runtime.
         cp /home/user/.claude-config/.claude.json /home/user/.claude.json
+        # Copy MCP server settings for Claude Code.
+        mkdir -p /home/user/.claude
+        cp /home/user/.claude-config/settings.json /home/user/.claude/settings.json
       group:
         kind: build
   - id: configure-settings
